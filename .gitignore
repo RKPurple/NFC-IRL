@@ -9,3 +9,7 @@
 # Env
 .env
 .env.local
+
+# Database Files
+*.sql
+*.db
