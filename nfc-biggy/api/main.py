@@ -6,7 +6,7 @@ import psycopg2.extras
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from queries import GET
+from queries import GET, POST, DELETE
 
 def load_env(path):
     env = {}
@@ -45,6 +45,8 @@ def run_query(query: str, params: tuple = ()):
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
     
+# ------- GET Endpoints -------
+
 @app.get("/habits")
 def get_habits():
     return run_query(GET.HABITS)
@@ -69,3 +71,35 @@ def get_habit_total_today(habit_id: int):
     end = start + timedelta(days=1)
     rows = run_query(GET.HABIT_TOTAL_TODAY, (habit_id, start, end))
     return {"habit_id": habit_id, "total": rows[0]["total"] if rows else 0}
+
+@app.get("/habit_logs/display")
+def get_habit_logs_display():
+    return run_query(GET.HABIT_LOG_DISPLAY)
+# ------ POST Endpoints -------
+
+@app.post("/habit_logs/manual")
+def create_manual_habit_log(habit_id: int, value: int):
+    tz = ZoneInfo("America/New_York")
+    logged_at = datetime.now(tz)
+    rows = run_query(POST.MANUAL_HABIT_LOG, (habit_id, value, logged_at))
+    return {"created_log": rows[0]}
+
+# ------ DELETE Endpoints -------
+
+@app.delete("/habit_logs/most_recent")
+def delete_most_recent_habit_log(habit_id: int):
+    tz = ZoneInfo("America/New_York")
+    now_local = datetime.now(tz)
+    start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=1)
+    rows = run_query(DELETE.MOST_RECENT_HABIT_LOG, (habit_id, start, end))
+    if not rows:
+        raise HTTPException(status_code=404, detail="No habit log found for today.")
+    return {"deleted_log": rows[0]}
+
+@app.delete("/habit_logs/{log_id}")
+def delete_habit_log_by_id(log_id: int):
+    rows = run_query(DELETE.HABIT_LOG_BY_ID, (log_id,))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Habit log not found.")
+    return {"deleted_log": rows[0]}

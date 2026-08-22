@@ -23,3 +23,16 @@ HABIT_TOTAL_TODAY = """
     WHERE habit_id = %s AND logged_at >= %s AND logged_at < %s
     GROUP BY habit_id
 """
+
+HABIT_LOG_DISPLAY = """
+    SELECT
+        hl.id AS log_id,
+        hl.habit_id,
+        hl.value,
+        hl.logged_at,
+        h.slug AS habit_name,
+        h.unit AS habit_unit
+    FROM habit_logs hl
+    JOIN habits h ON h.id = hl.habit_id
+    ORDER BY hl.logged_at DESC
+"""
