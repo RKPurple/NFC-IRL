@@ -1,5 +1,6 @@
 from pathlib import Path
-
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import psycopg2
 import psycopg2.extras
 from fastapi import FastAPI, HTTPException
@@ -34,10 +35,10 @@ app.add_middleware(
 def get_connection():
     return psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
 
-def run_query(query: str):
+def run_query(query: str, params: tuple = ()):
     try:
         with get_connection() as conn, conn.cursor() as cur:
-            cur.execute(query)
+            cur.execute(query, params)
             return cur.fetchall()
     except psycopg2.OperationalError as e:
         raise HTTPException(status_code=503, detail=f"Database unreachable: {e}")
@@ -48,12 +49,23 @@ def run_query(query: str):
 def get_habits():
     return run_query(GET.HABITS)
 
-
 @app.get("/habit_logs")
 def get_habit_logs():
     return run_query(GET.HABIT_LOGS)
 
-
 @app.get("/goals")
 def get_goals():
     return run_query(GET.GOALS)
+
+@app.get("/goals/with_habits")
+def get_goals_with_habits():
+    return run_query(GET.GOALS_WITH_HABITS)
+
+@app.get("/habits/{habit_id}/total_today")
+def get_habit_total_today(habit_id: int):
+    tz = ZoneInfo("America/New_York")
+    now_local = datetime.now(tz)
+    start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+    end = start + timedelta(days=1)
+    rows = run_query(GET.HABIT_TOTAL_TODAY, (habit_id, start, end))
+    return {"habit_id": habit_id, "total": rows[0]["total"] if rows else 0}
