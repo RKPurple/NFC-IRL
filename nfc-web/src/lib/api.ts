@@ -12,8 +12,11 @@ export async function deleteJSON<T>(path: string): Promise<T> {
     return res.json();
 }
 
-export async function postJSON<T>(path: string): Promise<T> {
-    const res = await fetch(`${API_URL}${path}`, { method: "POST" });
+export async function postJSON<T>(path: string, body?: unknown): Promise<T> {
+    const res = await fetch(`${API_URL}${path}`, {
+        method: "POST",
+        ...(body !== undefined ? { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : {}),
+    });
     if (!res.ok) throw new Error(`Request to ${path} failed: ${res.status}`);
     return res.json();
 }

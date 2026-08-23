@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getJSON } from "../lib/api";
 import HabitSlop from "../components/HabitSlop";
 import LogSlop from "../components/LogSlop";
@@ -32,6 +33,7 @@ function Homepage() {
     const [habitLogsError, setHabitLogsError] = useState<string | null>(null);
     const [goalsWithHabitError, setGoalsWithHabitError] = useState<string | null>(null);
     const [todaysTotals, setTodaysTotals] = useState<Record<number, number>>({});
+    const navigate = useNavigate();
 
     useEffect(() => {
         getJSON<HabitLogDisplay[]>("/habit_logs/display").then(setHabitLogs).catch((e) => setHabitLogsError(e.message));
@@ -53,37 +55,57 @@ function Homepage() {
     }, [goalsWithHabit]);
 
     return (
-        <div className="flex flex-row items-start justify-center min-h-screen text-center gap-8 py-8">
-            <div className="flex flex-col items-center gap-6">
-                {goalsWithHabitError && <p className="text-red-500">{goalsWithHabitError}</p>}
-                {goalsWithHabit?.map((goal) => (
-                    <HabitSlop
-                        key={goal.goal_id}
-                        habit_id={goal.habit_id}
-                        name={goal.habit_name}
-                        unit={goal.habit_unit}
-                        count={todaysTotals[goal.habit_id] ?? 0}
-                        goal={goal.target_value}
-                        onDeleted={() => window.location.reload()}
-                        onLogged={() => window.location.reload()}
-                    />
-                ))}
+        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
+            <header className="flex items-center justify-between px-8 py-6 border-b border-neutral-200 bg-white/60 backdrop-blur">
+                <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Habits</h1>
+                <button
+                    onClick={() => navigate("/edit")}
+                    className="hidden sm:inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-neutral-700 transition-colors"
+                >
+                    Edit
+                </button>
+            </header>
+
+            <div className="flex flex-row items-start justify-center gap-8 py-10 px-4">
+                <div className="flex flex-col items-center gap-6">
+                    {goalsWithHabitError && <p className="text-red-500">{goalsWithHabitError}</p>}
+                    {goalsWithHabit?.map((goal) => (
+                        <HabitSlop
+                            key={goal.goal_id}
+                            habit_id={goal.habit_id}
+                            name={goal.habit_name}
+                            unit={goal.habit_unit}
+                            count={todaysTotals[goal.habit_id] ?? 0}
+                            goal={goal.target_value}
+                            onDeleted={() => window.location.reload()}
+                            onLogged={() => window.location.reload()}
+                        />
+                    ))}
+                </div>
+                <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                    {habitLogsError && <p className="text-red-500">{habitLogsError}</p>}
+                    {habitLogs?.map((log) => (
+                        <LogSlop
+                            key={log.log_id}
+                            id={log.log_id}
+                            habit_id={log.habit_id}
+                            name={log.habit_name}
+                            unit={log.habit_unit}
+                            value={log.value}
+                            timestamp={log.logged_at}
+                            onDeleted={() => window.location.reload()}
+                        />
+                    ))}
+                </div>
             </div>
-            <div className="flex flex-col items-center gap-6 w-full max-w-md">
-                {habitLogsError && <p className="text-red-500">{habitLogsError}</p>}
-                {habitLogs?.map((log) => (
-                    <LogSlop
-                        key={log.log_id}
-                        id={log.log_id}
-                        habit_id={log.habit_id}
-                        name={log.habit_name}
-                        unit={log.habit_unit}
-                        value={log.value}
-                        timestamp={log.logged_at}
-                        onDeleted={() => window.location.reload()}
-                    />
-                ))}
-            </div>
+
+            <button
+                onClick={() => navigate("/edit")}
+                aria-label="Edit habits"
+                className="sm:hidden fixed bottom-6 right-6 flex items-center justify-center h-14 w-14 rounded-full bg-neutral-900 text-white text-2xl shadow-lg hover:bg-neutral-700 transition-colors"
+            >
+                +
+            </button>
         </div>
     )
 }

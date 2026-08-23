@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import Homepage from './pages/Homepage';
 import Login from './pages/Login';
+import Editpage from './pages/Editpage';
 import RequireAuth from './components/RequireAuth';
 
 function App() {
@@ -9,6 +10,7 @@ function App() {
       <Route path="/login" element={<Login/>} />
       <Route element={<RequireAuth/>}>
         <Route path="/" element={<Homepage/>} />
+        <Route path="/edit" element={<Editpage />} />
         <Route path="*" element={<Homepage/>} />
       </Route>
     </Routes>

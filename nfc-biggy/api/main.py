@@ -84,6 +84,13 @@ def create_manual_habit_log(habit_id: int, value: int):
     rows = run_query(POST.MANUAL_HABIT_LOG, (habit_id, value, logged_at))
     return {"created_log": rows[0]}
 
+@app.post("/habits/create")
+def create_habit(slug: str, name: str, unit: str):
+    tz = ZoneInfo("America/New_York")
+    created_at = datetime.now(tz)
+    rows = run_query(POST.CREATE_HABIT, (slug, name, unit, created_at))
+    return {"created_habit": rows[0]}
+
 # ------ DELETE Endpoints -------
 
 @app.delete("/habit_logs/most_recent")
@@ -103,3 +110,10 @@ def delete_habit_log_by_id(log_id: int):
     if not rows:
         raise HTTPException(status_code=404, detail="Habit log not found.")
     return {"deleted_log": rows[0]}
+
+@app.delete("/habits/{habit_id}")
+def delete_habit_by_id(habit_id: int):
+    rows = run_query(DELETE.HABIT_BY_ID, (habit_id,))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Habit not found.")
+    return {"deleted_habit": rows[0]}

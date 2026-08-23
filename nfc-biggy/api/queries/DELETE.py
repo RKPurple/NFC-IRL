@@ -15,3 +15,9 @@ HABIT_LOG_BY_ID = """
     WHERE id = %s
     RETURNING *
 """
+
+HABIT_BY_ID = """
+    DELETE FROM habits
+    WHERE id = %s
+    RETURNING *
+"""
