@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -6,10 +7,18 @@ import psycopg2.extras
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from queries import GET, POST, DELETE
+try:
+    from .queries import GET, POST, DELETE
+except ImportError:
+    # Falls back to an absolute import when main.py is run without its
+    # parent package context (e.g. `uvicorn main:app` from inside api/,
+    # which is how Railway's default start command can invoke it).
+    from queries import GET, POST, DELETE
 
 def load_env(path):
     env = {}
+    if not path.exists():
+        return env
     with open(path) as f:
         for line in f:
             line = line.strip()
@@ -19,15 +28,22 @@ def load_env(path):
             env[key.strip()] = value.strip().strip('"').strip("'")
     return env
 
-env = load_env(Path(__file__).parent.parent.parent / '.env')
-FRONTEND_URL = env.get('FRONTEND_URL')
-DATABASE_URL = env.get('DATABASE_URL')
+# Railway sets real env vars via its dashboard (os.environ).
+# Locally, fall back to reading .env directly since you're not
+# running `railway run` or similar to inject them for you.
+_local_env = load_env(Path(__file__).parent.parent.parent / '.env')
+
+DATABASE_URL = os.environ.get('DATABASE_URL') or _local_env.get('DATABASE_URL')
+FRONTEND_URL = os.environ.get('FRONTEND_URL') or _local_env.get('FRONTEND_URL')
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is not set (checked os.environ and local .env)")
 
 app = FastAPI(title="NFC-IRL API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  
+    allow_origins=[FRONTEND_URL] if FRONTEND_URL else [],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -44,7 +60,7 @@ def run_query(query: str, params: tuple = ()):
         raise HTTPException(status_code=503, detail=f"Database unreachable: {e}")
     except psycopg2.Error as e:
         raise HTTPException(status_code=500, detail=f"Database error: {e}")
-    
+
 # ------- GET Endpoints -------
 
 @app.get("/habits")
@@ -75,6 +91,7 @@ def get_habit_total_today(habit_id: int):
 @app.get("/habit_logs/display")
 def get_habit_logs_display():
     return run_query(GET.HABIT_LOG_DISPLAY)
+
 # ------ POST Endpoints -------
 
 @app.post("/habit_logs/manual")
