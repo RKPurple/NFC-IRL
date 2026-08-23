@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = import.meta.env.API_URL;
 
 export async function getJSON<T>(path: string): Promise<T> {
     const res = await fetch(`${API_URL}${path}`);
