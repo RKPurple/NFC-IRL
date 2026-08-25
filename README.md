@@ -1,32 +1,32 @@
-# React + TypeScript + Vite
+# NFC-IRL
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Personal app used for tracking habits of mine using NFC tags around my house.
 
-Currently, two official plugins are available:
+## Stack
+ 
+|| Tech | Hosted on |
+|---|---|---|
+| Frontend | React + Vite + TypeScript | Vercel |
+| Backend | FastAPI + psycopg2 | Railway |
+| Database | Supabase (Postgres + PostgREST) | Supabase |
+| Logging trigger | iOS Shortcuts | — |
+ 
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Running locally
 
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+**Frontend**
 ```
+cd nfc-web
+npm install
+npm run dev
+```
+Requires `VITE_API_URL` in `nfc-web/.env`.
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+**Backend**
+```
+cd nfc-biggy
+pip install -r requirements.txt
+uvicorn api.main:app --reload
+```
+Requires `DATABASE_URL` in `nfc-biggy/.env`.
+

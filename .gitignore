@@ -13,3 +13,6 @@
 # Database Files
 *.sql
 *.db
+
+# Docs
+docs/*
