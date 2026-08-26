@@ -7,6 +7,7 @@ import psycopg2.extras
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .notify import send_notification
+from fastapi import BackgroundTasks
 
 try:
     from .queries import GET, POST, DELETE
@@ -110,17 +111,19 @@ def create_habit(slug: str, name: str, unit: str):
     return {"created_habit": rows[0]}
 
 @app.post("/webhooks/habit_log_created")
-def habit_log_created_webhook(payload: dict):
+def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     record = payload.get("record", {})
     habit_id = record.get("habit_id")
     value = record.get("value")
 
     habit_rows = run_query(GET.HABIT_BY_ID, (habit_id,))
     habit_name = habit_rows[0]["name"] if habit_rows else f"Habit {habit_id}"
-
-    send_notification(
-        title="Habit logged",
-        message=f"{habit_name} logged (+{value})",
+    
+    background_tasks.add_task(
+        send_notification(
+            title="Habit logged",
+            message=f"{habit_name} logged (+{value})",
+        )
     )
     return {"status": "success"}
 
