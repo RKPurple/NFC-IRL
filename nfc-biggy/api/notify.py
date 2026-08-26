@@ -9,6 +9,7 @@ def send_notification(title: str, message: str, priority: int = 3):
             f"https://ntfy.sh/{NTFY_TOPIC}",
             data=message.encode("utf-8"),
             headers={"Title": title, "Priority": str(priority)},
+            timeout=5,
         )
     except requests.RequestException as e:
         print(f"Failed to send notification: {e}")

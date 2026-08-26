@@ -120,10 +120,9 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     habit_name = habit_rows[0]["name"] if habit_rows else f"Habit {habit_id}"
     
     background_tasks.add_task(
-        send_notification(
-            title="Habit logged",
-            message=f"{habit_name} logged (+{value})",
-        )
+        send_notification,
+        title="Habit logged",
+        message=f"{habit_name} logged (+{value})",
     )
     return {"status": "success"}
 
