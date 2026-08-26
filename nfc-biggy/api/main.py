@@ -126,6 +126,22 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     )
     return {"status": "success"}
 
+@app.get("/debug/network_check")
+def debug_network_check():
+    import requests as req
+    results = {}
+    for name, url in [
+        ("ntfy", "https://ntfy.sh"),
+        ("httpbin", "https://httpbin.org/get"),
+        ("github", "https://api.github.com"),
+    ]:
+        try:
+            resp = req.get(url, timeout=5)
+            results[name] = f"OK - status {resp.status_code}"
+        except Exception as e:
+            results[name] = f"FAILED - {type(e).__name__}: {e}"
+    return results
+
 # ------ DELETE Endpoints -------
 
 @app.delete("/habit_logs/most_recent")
