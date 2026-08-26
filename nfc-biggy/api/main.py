@@ -109,7 +109,7 @@ def create_habit(slug: str, name: str, unit: str):
     rows = run_query(POST.CREATE_HABIT, (slug, name, unit, created_at))
     return {"created_habit": rows[0]}
 
-@app.post("webhooks/habit_log_created")
+@app.post("/webhooks/habit_log_created")
 def habit_log_created_webhook(payload: dict):
     record = payload.get("record", {})
     habit_id = record.get("habit_id")
