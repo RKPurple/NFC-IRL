@@ -21,3 +21,15 @@ HABIT_BY_ID = """
     WHERE id = %s
     RETURNING *
 """
+
+INVENTORY_ITEM_BY_ID = """
+    DELETE FROM inventory_items
+    WHERE id = %s
+    RETURNING *
+"""
+
+INVENTORY_LINK_BY_ID = """
+    DELETE FROM habit_inventory_links
+    WHERE id = %s
+    RETURNING *
+"""

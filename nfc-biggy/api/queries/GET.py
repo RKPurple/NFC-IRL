@@ -38,3 +38,19 @@ HABIT_LOG_DISPLAY = """
     JOIN habits h ON h.id = hl.habit_id
     ORDER BY hl.logged_at DESC
 """
+
+INVENTORY_ITEMS = "SELECT * FROM inventory_items ORDER BY id"
+
+INVENTORY_LINKS_BY_INVENTORY_ITEM_ID = """
+    SELECT
+        hil.id,
+        hil.habit_id,
+        hil.item_id,
+        hil.decrement_amount,
+        hil.created_at,
+        habits.name AS habit_name
+    FROM habit_inventory_links hil
+    JOIN habits ON habits.id = hil.habit_id
+    WHERE hil.item_id = %s
+    ORDER BY hil.id
+"""

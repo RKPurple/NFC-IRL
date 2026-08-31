@@ -10,7 +10,7 @@ from .notify import send_notification
 from fastapi import BackgroundTasks
 
 try:
-    from .queries import GET, POST, DELETE
+    from .queries import GET, POST, DELETE, PATCH
 except ImportError:
     # Falls back to an absolute import when main.py is run without its
     # parent package context (e.g. `uvicorn main:app` from inside api/,
@@ -94,6 +94,15 @@ def get_habit_total_today(habit_id: int):
 def get_habit_logs_display():
     return run_query(GET.HABIT_LOG_DISPLAY)
 
+@app.get("/inventory_items")
+def get_inventory_items():
+    return run_query(GET.INVENTORY_ITEMS)
+
+@app.get("/inventory_item_links/by_inventory_item/{item_id}")
+def get_inventory_item_links_by_inventory_item(item_id: int):
+    rows = run_query(GET.INVENTORY_LINKS_BY_INVENTORY_ITEM_ID, (item_id,))
+    return {"item_id": item_id, "links": rows}
+
 # ------ POST Endpoints -------
 
 @app.post("/habit_logs/manual")
@@ -126,6 +135,58 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     )
     return {"status": "success"}
 
+@app.post("/inventory_items/create")
+def create_inventory_item(name: str, quantity: int, unit: str | None = None, image_url: str | None = None, low_stock_threshold: int | None = None):
+    tz = ZoneInfo("America/New_York")
+    created_at = datetime.now(tz)
+    rows = run_query(POST.CREATE_INVENTORY_ITEM, (name, quantity, unit, image_url, low_stock_threshold, created_at))
+    return {"created_item": rows[0]}
+
+@app.post("/inventory_item_links/create")
+def create_inventory_item_link(habit_id: int, item_id: int, decrement_amount: int):
+    tz = ZoneInfo("America/New_York")
+    created_at = datetime.now(tz)
+    rows = run_query(POST.CREATE_INVENTORY_ITEM_LINK, (habit_id, item_id, decrement_amount, created_at))
+    return {"created_link": rows[0]}
+
+# ------ PATCH Endpoints -------
+
+@app.patch("/inventory_items/{item_id}/quantity")
+def quick_add_inventory_item(item_id: int, quantity: int):
+    rows = run_query(PATCH.INVENTORY_QUANTITY, (quantity, item_id))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Inventory item not found.")
+    return {"updated_item": rows[0]}
+
+@app.patch("/inventory_items/{item_id}")
+def update_inventory_item(
+    item_id: int,
+    name: str | None = None,
+    quantity: float | None = None,
+    unit: str | None = None,
+    image_url: str | None = None,
+    low_stock_threshold: float | None = None,
+):
+    fields = {
+        "name": name,
+        "quantity": quantity,
+        "unit": unit,
+        "image_url": image_url,
+        "low_stock_threshold": low_stock_threshold,
+    }
+    updates = {column: value for column, value in fields.items() if value is not None}
+    if not updates:
+        raise HTTPException(status_code=400, detail="No fields provided to update.")
+
+    set_clause = ", ".join(f"{column} = %s" for column in updates)
+    query = PATCH.UPDATE_INVENTORY_ITEM.format(set_clause=set_clause)
+    params = tuple(updates.values()) + (item_id,)
+
+    rows = run_query(query, params)
+    if not rows:
+        raise HTTPException(status_code=404, detail="Inventory item not found.")
+    return {"updated_item": rows[0]}
+
 # ------ DELETE Endpoints -------
 
 @app.delete("/habit_logs/most_recent")
@@ -152,3 +213,17 @@ def delete_habit_by_id(habit_id: int):
     if not rows:
         raise HTTPException(status_code=404, detail="Habit not found.")
     return {"deleted_habit": rows[0]}
+
+@app.delete("/inventory_items/{item_id}")
+def delete_inventory_item_by_id(item_id: int):
+    rows = run_query(DELETE.INVENTORY_ITEM_BY_ID, (item_id,))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Inventory item not found.")
+    return {"deleted_item": rows[0]}
+
+@app.delete("/inventory_item_links/{link_id}")
+def delete_inventory_item_link_by_id(link_id: int):
+    rows = run_query(DELETE.INVENTORY_LINK_BY_ID, (link_id,))
+    if not rows:
+        raise HTTPException(status_code=404, detail="Inventory item link not found.")
+    return {"deleted_link": rows[0]}
