@@ -123,16 +123,57 @@ def create_habit(slug: str, name: str, unit: str):
 def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     record = payload.get("record", {})
     habit_id = record.get("habit_id")
-    value = record.get("value")
-
+    raw_value = record.get("value")
+ 
+    if habit_id is None or raw_value is None:
+        return {"status": "ignored", "reason": "missing habit_id or value"}
+ 
+    value = Decimal(str(raw_value))
+ 
     habit_rows = run_query(GET.HABIT_BY_ID, (habit_id,))
     habit_name = habit_rows[0]["name"] if habit_rows else f"Habit {habit_id}"
-    
+ 
     background_tasks.add_task(
         send_notification,
         title="Habit logged",
         message=f"{habit_name} logged (+{value})",
     )
+ 
+    # --- Goal met (daily goals only - HABIT_TOTAL_TODAY is a daily window) ---
+    goal_rows = run_query(GET.GOAL_BY_HABIT_ID, (habit_id,))
+    if goal_rows:
+        target = goal_rows[0]["target_value"]
+        tz = ZoneInfo("America/New_York")
+        now_local = datetime.now(tz)
+        start = now_local.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = start + timedelta(days=1)
+        total_rows = run_query(GET.HABIT_TOTAL_TODAY, (habit_id, start, end))
+        total_after = total_rows[0]["total"] if total_rows else Decimal(0)
+        total_before = total_after - value
+ 
+        if total_before < target <= total_after:
+            background_tasks.add_task(
+                send_notification,
+                title="Goal met!",
+                message=f"{habit_name} goal reached ({total_after}/{target})",
+            )
+ 
+    # --- Stock low (fires every time it's at/below threshold, not just first crossing) ---
+    link_rows = run_query(GET.INVENTORY_LINKS_BY_HABIT, (habit_id,))
+    for link in link_rows:
+        threshold = link["low_stock_threshold"]
+        if threshold is None:
+            continue  # no alerting configured for this item
+ 
+        quantity_after = link["quantity"]
+ 
+        if quantity_after <= threshold:
+            background_tasks.add_task(
+                send_notification,
+                title="Low stock",
+                message=f"{link['item_name']} is low ({quantity_after} left)",
+            )
+ 
     return {"status": "success"}
 
 @app.post("/inventory_items/create")
