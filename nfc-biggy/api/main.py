@@ -8,6 +8,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from .notify import send_notification
 from fastapi import BackgroundTasks
+from decimal import Decimal
 
 try:
     from .queries import GET, POST, DELETE, PATCH
