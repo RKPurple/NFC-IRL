@@ -6,6 +6,8 @@ HABIT_LOGS = "SELECT * FROM habit_logs ORDER BY logged_at DESC"
 
 GOALS = "SELECT * FROM goals ORDER BY id"
 
+GOAL_BY_HABIT_ID = "SELECT * FROM goals WHERE habit_id = %s AND period = 'Daily'"
+
 GOALS_WITH_HABITS = """
     SELECT
         goals.id AS goal_id,
@@ -37,4 +39,32 @@ HABIT_LOG_DISPLAY = """
     FROM habit_logs hl
     JOIN habits h ON h.id = hl.habit_id
     ORDER BY hl.logged_at DESC
+"""
+
+INVENTORY_ITEMS = "SELECT * FROM inventory_items ORDER BY id"
+
+INVENTORY_LINKS_BY_INVENTORY_ITEM_ID = """
+    SELECT
+        hil.id,
+        hil.habit_id,
+        hil.item_id,
+        hil.decrement_amount,
+        hil.created_at,
+        habits.name AS habit_name
+    FROM habit_inventory_links hil
+    JOIN habits ON habits.id = hil.habit_id
+    WHERE hil.item_id = %s
+    ORDER BY hil.id
+"""
+
+INVENTORY_LINKS_BY_HABIT = """
+    SELECT
+        hil.item_id,
+        hil.decrement_amount,
+        ii.name AS item_name,
+        ii.quantity,
+        ii.low_stock_threshold
+    FROM habit_inventory_links hil
+    JOIN inventory_items ii ON ii.id = hil.item_id
+    WHERE hil.habit_id = %s
 """

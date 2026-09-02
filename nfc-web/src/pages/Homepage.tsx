@@ -55,17 +55,7 @@ function Homepage() {
     }, [goalsWithHabit]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100">
-            <header className="flex items-center justify-between px-8 py-6 border-b border-neutral-200 bg-white/60 backdrop-blur">
-                <h1 className="text-2xl font-semibold tracking-tight text-neutral-800">Habits</h1>
-                <button
-                    onClick={() => navigate("/edit")}
-                    className="hidden sm:inline-flex items-center gap-2 rounded-full bg-neutral-900 text-white px-4 py-2 text-sm font-medium shadow-sm hover:bg-neutral-700 transition-colors"
-                >
-                    Edit
-                </button>
-            </header>
-
+        <div className="min-h-screen bg-gradient-to-b from-neutral-50 to-neutral-100 pb-24">
             <div className="flex flex-row items-start justify-center gap-8 py-10 px-4">
                 <div className="flex flex-col items-center gap-6">
                     {goalsWithHabitError && <p className="text-red-500">{goalsWithHabitError}</p>}
@@ -82,7 +72,7 @@ function Homepage() {
                         />
                     ))}
                 </div>
-                <div className="flex flex-col items-center gap-6 w-full max-w-md">
+                <div className="flex flex-col items-center gap-6 w-full max-w-md max-h-[75vh] overflow-y-auto pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {habitLogsError && <p className="text-red-500">{habitLogsError}</p>}
                     {habitLogs?.map((log) => (
                         <LogSlop

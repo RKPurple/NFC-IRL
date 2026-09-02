@@ -20,3 +20,10 @@ export async function postJSON<T>(path: string, body?: unknown): Promise<T> {
     if (!res.ok) throw new Error(`Request to ${path} failed: ${res.status}`);
     return res.json();
 }
+
+export async function patchJSON<T>(path: string): Promise<T> {
+    const res = await fetch(`${API_URL}${path}`, { method: "PATCH" });
+    if (!res.ok) throw new Error(`Request to ${path} failed: ${res.status}`);
+    return res.json();
+}
+
