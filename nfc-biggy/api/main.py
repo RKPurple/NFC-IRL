@@ -134,11 +134,8 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
     habit_rows = run_query(GET.HABIT_BY_ID, (habit_id,))
     habit_name = habit_rows[0]["name"] if habit_rows else f"Habit {habit_id}"
  
-    background_tasks.add_task(
-        send_notification,
-        title="Habit logged",
-        message=f"{habit_name} logged (+{value})",
-    )
+    title = "Habit logged"
+    lines = [f"{habit_name} logged (+{value})"]
  
     # --- Goal met (daily goals only - HABIT_TOTAL_TODAY is a daily window) ---
     goal_rows = run_query(GET.GOAL_BY_HABIT_ID, (habit_id,))
@@ -153,13 +150,10 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
         total_before = total_after - value
  
         if total_before < target <= total_after:
-            background_tasks.add_task(
-                send_notification,
-                title="Goal met!",
-                message=f"{habit_name} goal reached ({total_after}/{target})",
-            )
+            title = "Goal met!"
+            lines = [f"{habit_name} goal reached ({total_after}/{target})"]
  
-    # --- Stock low (fires every time it's at/below threshold, not just first crossing) ---
+    # --- Stock low (fires every time it's at/below threshold, appended to whatever's above) ---
     link_rows = run_query(GET.INVENTORY_LINKS_BY_HABIT, (habit_id,))
     for link in link_rows:
         threshold = link["low_stock_threshold"]
@@ -169,11 +163,13 @@ def habit_log_created_webhook(payload: dict, background_tasks: BackgroundTasks):
         quantity_after = link["quantity"]
  
         if quantity_after <= threshold:
-            background_tasks.add_task(
-                send_notification,
-                title="Low stock",
-                message=f"{link['item_name']} is low ({quantity_after} left)",
-            )
+            lines.append(f"Low stock: {link['item_name']} ({quantity_after} left)")
+ 
+    background_tasks.add_task(
+        send_notification,
+        title=title,
+        message="\n".join(lines),
+    )
  
     return {"status": "success"}
 
