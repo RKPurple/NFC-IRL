@@ -4,6 +4,7 @@ import Login from './pages/Login';
 import Editpage from './pages/Editpage';
 import InventoryPage from './pages/InventoryPage';
 import InventoryItemEditPage from './pages/InventoryItemEditPage';
+import Viewpage from './pages/Viewpage';
 import RequireAuth from './components/RequireAuth';
 import Layout from './components/Layout';
 
@@ -17,6 +18,7 @@ function App() {
           <Route path="/edit" element={<Editpage />} />
           <Route path="/inventory" element={<InventoryPage />} />
           <Route path="/inventory/:id/edit" element={<InventoryItemEditPage />} />
+          <Route path="/view" element={<Viewpage />} />
           <Route path="*" element={<Homepage/>} />
         </Route>
       </Route>
