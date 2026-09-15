@@ -4,6 +4,7 @@ const links = [
     { to: "/", label: "Home" },
     { to: "/edit", label: "Edit" },
     { to: "/inventory", label: "Inventory" },
+    { to: "/view", label: "View" },
 ];
 
 function BottomNav() {

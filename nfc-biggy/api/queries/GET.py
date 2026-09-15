@@ -68,3 +68,24 @@ INVENTORY_LINKS_BY_HABIT = """
     JOIN inventory_items ii ON ii.id = hil.item_id
     WHERE hil.habit_id = %s
 """
+
+GOAL_HISTORY_QUERY = """
+SELECT
+    d::date AS day,
+    g.target_value,
+    COALESCE(SUM(hl.value), 0) AS total_logged,
+    LEAST(ROUND(COALESCE(SUM(hl.value), 0) / g.target_value * 100, 1), 100) AS percent,
+    COALESCE(SUM(hl.value), 0) >= g.target_value AS met
+FROM generate_series(
+    (CURRENT_DATE AT TIME ZONE 'America/New_York') - (%(days)s - 1) * interval '1 day',
+    (CURRENT_DATE AT TIME ZONE 'America/New_York'),
+    interval '1 day'
+) AS d
+CROSS JOIN goals g
+LEFT JOIN habit_logs hl
+    ON hl.habit_id = g.habit_id
+    AND (hl.logged_at AT TIME ZONE 'America/New_York')::date = d::date
+WHERE g.id = %(goal_id)s
+GROUP BY d, g.target_value
+ORDER BY d;
+"""

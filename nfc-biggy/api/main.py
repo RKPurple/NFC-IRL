@@ -104,6 +104,12 @@ def get_inventory_item_links_by_inventory_item(item_id: int):
     rows = run_query(GET.INVENTORY_LINKS_BY_INVENTORY_ITEM_ID, (item_id,))
     return {"item_id": item_id, "links": rows}
 
+@app.get("/goal_history/{goal_id}")
+def get_goal_history(goal_id: int, days: int = 7):
+    days = min(max(days, 1), 365)  # soft bound per earlier discussion
+    rows = run_query(GET.GOAL_HISTORY_QUERY, {"goal_id": goal_id, "days": days})
+    return rows
+
 # ------ POST Endpoints -------
 
 @app.post("/habit_logs/manual")
