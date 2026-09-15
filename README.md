@@ -10,6 +10,7 @@ Personal app used for tracking habits of mine using NFC tags around my house.
 | Backend | FastAPI + psycopg2 | Railway |
 | Database | Supabase (Postgres + PostgREST) | Supabase |
 | Logging trigger | iOS Shortcuts | — |
+| Notifications | Supabase Webhook -> Pushover App
  
 
 ## Running locally
